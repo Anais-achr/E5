@@ -32,11 +32,11 @@ void iterate_cpu(uint32_t* arr, double x, double y, double delta, uint32_t iterm
             double zi = ci;
             
             int k = 0;
-            for(; i < itermax; i++) {
+            for(; k < itermax; k++) {
                 if(zr < -2 || zr > 2 || zi < -2 || zi > 2) {
                     break;
                 }
-                double tmpr = (zr-zi)*(zr-zi) + cr;
+                double tmpr = (zr*zr)-(zi*zi) + cr;
                 double tmpi = 2*zr*zi + ci;
 
                 zr = tmpr;
@@ -51,12 +51,42 @@ void iterate_cpu(uint32_t* arr, double x, double y, double delta, uint32_t iterm
 }
 
 __global__ void iterate_gpu(uint32_t* arr, double x, double y, double delta, uint32_t itermax){
-    uint32_t tid = threadIdx.x + x*y;
+    uint32_t i = blockIdx.x*blockDim.x + threadIdx.x;
+    uint32_t j = blockIdx.y*blockDim.y + threadIdx.y;
+
+    if(i > LEN || j > LEN) {
+        return;
+    }
+
+    double cr = x+j*delta;
+    double ci = y-i*delta;
+
+    double zr = cr;
+    double zi = ci;
+
+    int k = 0;
+    for(; k < itermax; k++) {
+        if(zr < -2 || zr > 2 || zi < -2 || zi > 2) {
+            break;
+        }
+        double tmpr = (zr*zr)-(zi*zi) + cr;
+        double tmpi = 2*zr*zi + ci;
+
+        zr = tmpr;
+        zi = tmpi;
+
+    }
+    arr[getindex(i, j)] = k;
+
     return;
 }
 
 void kernel_call(uint32_t* arr, double x, double y, double delta, uint32_t itermax){
-    // todo: write the kernel call here, with given parameters and appropriate thread grid configurations
+    dim3 block(32, 32);
+    dim3 grid(32, 32);
+
+    iterate_gpu<<<grid, block>>>(arr, x, y, delta, itermax);
+    cudaDeviceSynchronize();
     return;
 }
 
