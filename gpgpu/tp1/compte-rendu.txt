@@ -1,0 +1,23 @@
+Exercice 1 :
+
+name = NVIDIA GeForce RTX 3050 Ti Laptop GPU
+clock frequency = 1035000
+global memory size = 4075880448
+warp size = 32
+
+Exercice 2 :
+
+On voit que dans un blocs on est synchrone mais pas entre les blocs
+
+Exercice 3 :
+
+Checking 1024 for sum-product numbers
+0
+1
+135
+144
+Checking 16777216 for sum-product numbers
+0
+1
+135
+144
