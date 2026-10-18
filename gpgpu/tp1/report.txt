@@ -1,0 +1,58 @@
+TP1 - Basics
+
+Anaïs
+Aoucher
+
+---- Exercice 1 ----
+
+name = NVIDIA GeForce RTX 3050 Ti Laptop GPU
+clock frequency = 1035000
+global memory size = 4075880448
+warp size = 32
+
+
+Ce GPU est une NVIDIA GeForce RTX 3050 Ti Laptop GPU
+Il tourne à 1 035 000 kHz, il a 4 075 880 448 octets de mémoire globale (4Go) et un warp de 32 threads
+
+
+---- Exercice 2 ----
+
+On voit que dans un blocs les thread sont synchrone, en effet un bloc est
+découpé en warps de 32 threads qui exécutent la même instruction en même temps,
+mais les blocs sont lancés indépendamment.
+
+---- Exercice 3 ----
+
+observations :
+Checking 1024 for sum-product numbers
+0
+1
+135
+144
+Checking 16777216 for sum-product numbers
+0
+1
+135
+144
+
+Le programme demo2 fonctionnait pas bien car on dépassait la limite de 1024 threads par bloc
+Il fallait repartir le travail sur plusieurs bloc en mettant une taille max.
+
+
+---- Problème 1 ----
+
+1) Pour la version CPU, j’ai parcouru tous les pixels avec deux boucles.
+ Pour chaque pixel, je calcule le nombre complexe correspondant à partir de sa position, puis je
+ répète z = z² + c jusqu’à ce que z sorte des bornes ou que j’atteigne itermax
+
+2) Pour la version GPU, le calcul est le même, mais je n’ai plus de boucles sur les pixels poru que
+ chaque thread s’occupe d’un seul pixel.
+ Il retrouve sa position grâce à son numéro de bloc et de thread,
+ vérifie qu’il est bien dans l’image, puis fait la même boucle d’itération
+
+3) En comparant les deux versions, le GPU est beaucoup plus rapide, environ 736 FPS contre
+ 0,3 FPS pour le CPU, soit un gain de plus de 2000 fois pour les mêmes 530 images.
+ Cela s’explique par le fait que chaque pixel se calcule indépendamment des autres, en effet,
+ le GPU en traite des milliers en parallèle, alors que le CPU les traite un par un.
+
+ De plus, à la fin du zoom l’image devient pixelisée et perd ses détails fins
