@@ -36,9 +36,10 @@ __global__ void conv_global(const unsigned char* src, unsigned char* dest, int32
    float bleu = 0.0f;
 
    //on parcourt les cases du filtre
+   //
    for(int v = 0; v < 3; v++) {
     for(int u = 0; u < 3; u++) {
-
+        
     }
    }
 
