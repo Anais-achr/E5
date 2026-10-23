@@ -1,0 +1,58 @@
+ex2 :
+
+- starve1.cu
+    First invocation
+    135
+    144
+    1
+    0
+    379.3439ms
+
+    Second invocation
+    0
+    1
+    135
+    144
+    4.8323ms
+
+On a plus de thread qui travaillent vraiment dans le second as que dans le premier car 
+
+
+
+- starve2.cu
+    Copying data to device
+    First method
+    395.3370ms
+
+    Second method
+    148.1810ms
+
+la multiplicaiton fois 2 ne pose pas de probleme contrairement, avec la premiere version on a une partie qui travaille sur la premiere moitiée et l'autre partie sur la deuxième
+
+- starve3.cu
+    Copying data to device
+    First method
+    111.5332ms
+
+    Second method
+    0.0123ms
+
+On uilise la mémoire partgée et dns le seocnd cas on utilise _syncthread pour être sur que tous les thread aient fini de copier
+
+- starve4.cu
+    Copying data to device
+    First method
+    33.8627ms
+
+    Second method
+    7.4813ms
+
+
+
+probleme 1 :
+
+1) On nous dit que le filtre est un petit tableau de 9 nombres, et ce tableau ne changent 
+  jamais pendnat les caluls car tous les threads ont besoin des memes 9 nombres.
+  Et la mémoire constante est faite pour ça, en effet c'est une petite mémoire rapide qui est reservée aux valeurs 
+  qu'on va lire sans les modifier.
+  Et donc dans notre cas plusieurs threads vont demander la même valeur en même temps, et au lieu de faire plsuierus lecture (une par thread) on en fait qu'un esuel pour le gorupe de thread qui demande.
