@@ -32,6 +32,10 @@ __global__ void conv_global(const unsigned char* src, unsigned char* dest, int32
    int i = blockIdx.x*blockDim.x+threadIdx.x;
    int j = blockIdx.y*blockDim.y+threadIdx.y;
 
+   if(i >= w || j >=h) {
+    return;
+   }
+
    float rouge = 0.0f;
    float vert = 0.0f;
    float bleu = 0.0f;
@@ -64,10 +68,33 @@ __global__ void conv_global(const unsigned char* src, unsigned char* dest, int32
         rouge += coef*src[pixel];
         vert += coef*src[pixel+1];
         bleu += coef*src[pixel+2];
-
     }
    }
 
+   int sortie = 3*(j*w+i);
+
+    if(rouge < 0) {
+        rouge = 0;
+    }
+    if(rouge > 255) {
+        rouge = 255;
+    }
+    if(vert < 0) {
+        vert = 0;
+    }
+    if(vert > 255) {
+        vert = 255;
+    }
+    if(bleu < 0) {
+        bleu = 0;
+    }
+    if(bleu > 255) {
+        bleu = 255;
+    }
+
+    dest[sortie] = (unsigned char)rouge;
+    dest[sortie+1] = (unsigned char)vert;
+    dest[sortie+2] = (unsigned char)bleu;
 }
 
 float conv_global_gpu(unsigned char* pixels, int32_t w, int32_t h){
@@ -91,6 +118,8 @@ float conv_global_gpu(unsigned char* pixels, int32_t w, int32_t h){
 
    cudaFree(d_src);
    cudaFree(d_dst);
+
+   return t;
 }
 
 __global__ void conv_texture(cudaTextureObject_t src, unsigned char* dest, int32_t w, int32_t h){
