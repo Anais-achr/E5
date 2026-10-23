@@ -1,4 +1,5 @@
 #include "SDL2/include/SDL.h"
+#include <driver_types.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
@@ -39,14 +40,57 @@ __global__ void conv_global(const unsigned char* src, unsigned char* dest, int32
    //
    for(int v = 0; v < 3; v++) {
     for(int u = 0; u < 3; u++) {
-        
+        int x = i - 1 + u;
+        int y = j - 1 + v;
+
+        if(x < 0) {
+            x=0;
+        }
+        if(x > w-1) {
+            x = w-1;
+        }
+
+        if(y < 0) {
+            y=0;
+        }
+        if(y > h-1) {
+            y = h-1;
+        }
+
+
+        int pixel = 3*(y*w+x);
+        float coef = filter_device[v*3+u];
+
+        rouge += coef*src[pixel];
+        vert += coef*src[pixel+1];
+        bleu += coef*src[pixel+2];
+
     }
    }
 
 }
 
 float conv_global_gpu(unsigned char* pixels, int32_t w, int32_t h){
-    // todo: write the code that manages memory (global memory) and invokes the kernel conv_global, it should return the running time
+   size_t taille = 3*(size_t)w*h;
+
+   unsigned char *d_src, *d_dst;
+   cudaMalloc(&d_src, taille);
+   cudaMalloc(&d_dst, taille);
+
+   cudaMemcpy(d_src, pixels, taille, cudaMemcpyHostToDevice);
+
+   dim3 bloc(16, 16);
+   dim3 grille(32, 32);
+
+   cuStopwatch chono;
+   chono.start();
+   conv_global<<<grille, bloc>>>(d_src, d_dst, w, h);
+   float t = chono.stop();
+
+   cudaMemcpy(pixels, d_dst, taille, cudaMemcpyDeviceToHost);
+
+   cudaFree(d_src);
+   cudaFree(d_dst);
 }
 
 __global__ void conv_texture(cudaTextureObject_t src, unsigned char* dest, int32_t w, int32_t h){
