@@ -1,0 +1,8 @@
+
+
+Exercice 1 :
+
+chaos1.cu : 
+
+Computation time: 29.8504ms
+Result:                                                         27379520
