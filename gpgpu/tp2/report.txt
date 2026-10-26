@@ -56,3 +56,25 @@ probleme 1 :
   Et la mémoire constante est faite pour ça, en effet c'est une petite mémoire rapide qui est reservée aux valeurs 
   qu'on va lire sans les modifier.
   Et donc dans notre cas plusieurs threads vont demander la même valeur en même temps, et au lieu de faire plsuierus lecture (une par thread) on en fait qu'un esuel pour le gorupe de thread qui demande.
+
+
+2) cf conv-filter.cu fonction conv_global
+
+3) cf conv-filter.cu fonction conv_global_gpu
+
+Résultats : 
+
+sur l'image cat.bpm
+
+temps d'execution : 
+    identity : 0.3871 ms
+    edge : 0.3819 ms
+    gauss : 0.3872 ms
+    sharp : 0.3884 ms
+
+
+Observation : 
+    identity : les deux images sont les mêmes
+    edge : l'image devient très sombre 
+    gauss : 
+    sharp :
