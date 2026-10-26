@@ -67,14 +67,26 @@ Résultats :
 sur l'image cat.bpm
 
 temps d'execution : 
-    identity : 0.3871 ms
-    edge : 0.3819 ms
-    gauss : 0.3872 ms
-    sharp : 0.3884 ms
+    - identity : 0.3871 ms
+    - edge : 0.3819 ms
+    - gauss : 0.3872 ms
+    - sharp : 0.3884 ms
 
 
-Observation : 
-    identity : les deux images sont les mêmes
-    edge : l'image devient très sombre 
-    gauss : 
-    sharp :
+Observation :
+    - identity : les deux images sont les mêmes
+    - edge : l'image devient presque noire, on ne voit plus que les contours
+       (les moustaches, le poil, les bords de l'écran).
+
+       ça peut s'expliquer par le filtre appliqué, le 8 au centre et les -1 aux bords
+       ont un role important, car le 8 sera annulé par les -1 si on est dans uen zone de
+       couleurs unie, donc la couleur sera sombre. Par contre dans une zone de couleur pas unie,
+       resultat ne sera pas null donc on aura des couleurs, ici comme on a que les mêmes
+       coefficients on aura les mêmes couleurs.
+
+    - gauss : l'image est moins nette et on a moins de couleurs claires, les moustaches et les
+        petits détails clairs (poil, lettres de l'écran) s'atténuent
+
+        ça s'explique par le fait que le filtre a que des divisons de 1, donc on est pas
+        complet, mais pas negatif non plus, ce qui explique les details moins net
+    - sharp :
