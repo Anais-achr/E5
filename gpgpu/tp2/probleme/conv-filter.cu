@@ -107,7 +107,7 @@ float conv_global_gpu(unsigned char* pixels, int32_t w, int32_t h){
    cudaMemcpy(d_src, pixels, taille, cudaMemcpyHostToDevice);
 
    dim3 bloc(16, 16);
-   dim3 grille(32, 32);
+   dim3 grille(256, 256);
 
    cuStopwatch chono;
    chono.start();
