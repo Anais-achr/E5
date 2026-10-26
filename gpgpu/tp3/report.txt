@@ -4,5 +4,28 @@ Exercice 1 :
 
 chaos1.cu : 
 
-Computation time: 29.8504ms
-Result:                                                         27379520
+Computation time: 2.8297ms
+Result: 27481920
+
+
+Problème : les threads font la même addition en même temps et elle n'est pas atomique.
+            Pour corriger ça il faut utiliser atomicAdd()
+
+
+resultat correction :
+
+Computation time: 4.0730ms
+Result: 549755289600
+
+
+chaos2 :
+
+Problème : on a un problmèe de synchonisation, car on peut acceder à la valru d'une case qui n'est pas encore remplie. 
+           les threads ne vont pas tous forcément à la meme vitesse.
+           Pour corriger ça il faut ajouter __syncthreads()
+
+
+
+Exercice 2 :
+
+Methode 1 : chaque thread parcourt le tableau, s'il trouve 42 alors on met 1, puis on additionne les threads entre eux pour avoir le total

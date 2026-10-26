@@ -24,7 +24,7 @@ int main() {
 	trianglenumber<<<1024, 1024>>>(res_dev, 1024*1024);
     cudaMemcpyAsync(res_host, res_dev, sizeof(uint64_t), cudaMemcpyDeviceToHost);
     printf("Computation time: %.4fms\n", sw1.stop());
-    printf("Result: %I64u\n", *res_host);
+    printf("Result: %llu\n", *res_host);
     
     // Free memory
     cudaFree(res_dev);
