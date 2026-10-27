@@ -16,7 +16,7 @@ public class Paint {
     }
 
     public static void main(String[] args) throws IOException {
-        Path path = Paths.get("/Users/anaisaoucher/git/E5/designPattern/UgePaint/draw2.txt");
+        Path path = Paths.get("draw2.txt");
         var drawing = Drawing.fromFile(path);
 
         var area = new SimpleGraphics("area", 800, 600);
