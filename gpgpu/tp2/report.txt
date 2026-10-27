@@ -1,3 +1,12 @@
+Anaïs
+Aoucher
+E5 INFO
+
+
+TP2 : Threads and Memories
+
+
+
 ex2 :
 
 - starve1.cu
@@ -15,7 +24,8 @@ ex2 :
     144
     4.8323ms
 
-On a plus de thread qui travaillent vraiment dans le second as que dans le premier car 
+Dans la première invocation, chaque bloc n'a qu'un thread, donc chaque warp a qu'un thread qui
+travaille. Dans la deuxième, les blocs de 1024 threads remplissent les warps.
 
 
 
@@ -27,7 +37,8 @@ On a plus de thread qui travaillent vraiment dans le second as que dans le premi
     Second method
     148.1810ms
 
-la multiplicaiton fois 2 ne pose pas de probleme contrairement, avec la premiere version on a une partie qui travaille sur la premiere moitiée et l'autre partie sur la deuxième
+la multiplicaiton fois 2 ne pose pas de probleme contrairement, avec la premiere version
+ on a une partie qui travaille sur la premiere moitiée et l'autre partie sur la deuxième
 
 - starve3.cu
     Copying data to device
@@ -37,7 +48,8 @@ la multiplicaiton fois 2 ne pose pas de probleme contrairement, avec la premiere
     Second method
     0.0123ms
 
-On uilise la mémoire partgée et dns le seocnd cas on utilise _syncthread pour être sur que tous les thread aient fini de copier
+On uilise la mémoire partgée et dns le seocnd cas on utilise _syncthread pour
+être sur que tous les thread aient fini de copier
 
 - starve4.cu
     Copying data to device
@@ -47,6 +59,9 @@ On uilise la mémoire partgée et dns le seocnd cas on utilise _syncthread pour 
     Second method
     7.4813ms
 
+Dans chaque version, un seul des deux accès est coalescé, la lecture dans la première,
+l'écriture dans la deuxième, donc la deuxième est plus rapide car une écriture non coalescée
+coûte plus cher qu'une lecture non coalescée
 
 
 probleme 1 :
@@ -73,8 +88,9 @@ temps d'execution :
     - sharp : 0.3884 ms
 
 
-Observation :
+Observations : (cf dossier resultatsImages)
     - identity : les deux images sont les mêmes
+
     - edge : l'image devient presque noire, on ne voit plus que les contours
        (les moustaches, le poil, les bords de l'écran).
 
@@ -89,4 +105,6 @@ Observation :
 
         ça s'explique par le fait que le filtre a que des divisons de 1, donc on est pas
         complet, mais pas negatif non plus, ce qui explique les details moins net
-    - sharp :
+
+    - sharp : l'image est plus nette que l'originale, les moustaches, les poils
+         et le texte de l'écran ressortent mieux et les contours sont plus marqué

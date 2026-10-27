@@ -1,44 +1,44 @@
 package fr.uge.poo.paint.ex4;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Drawing {
     private final List<Shape> shapes;
     private Shape selected;
 
-
     private Drawing(List<Shape> shapes) {
-        this.shapes = shapes;
+        this.shapes = List.copyOf(shapes);
     }
 
-    static Drawing fromFile(Path path) throws IOException {
-        List<Shape> res = new ArrayList<>();
+    public static Drawing fromFile(Path path) throws IOException {
+        Objects.requireNonNull(path);
+        var res = new ArrayList<Shape>();
 
-        try(Stream<String> lines = Files.lines(path)) {
+        try (Stream<String> lines = Files.lines(path)) {
             lines.forEach(line -> {
-                String[] tokens = line.split(" ");
-                var shape = tokens[0];
+                var tokens = line.split(" ");
                 int x1 = Integer.parseInt(tokens[1]);
                 int y1 = Integer.parseInt(tokens[2]);
                 int x2 = Integer.parseInt(tokens[3]);
                 int y2 = Integer.parseInt(tokens[4]);
 
-                var forme = switch (shape) {
-                    case "ellipse" -> { yield new Elipse(x1, y1, x2, y2); }
-                    case "line" -> { yield new Line(x1, y1, x2, y2); }
-                    case "rectangle" -> { yield new Rectangle(x1, y1, x2, y2); }
-                    default -> throw new IllegalStateException("Unexpected value: " + shape);
+                Shape shape = switch (tokens[0]) {
+                    case "ellipse"   -> new Ellipse(x1, y1, x2, y2);
+                    case "line"      -> new Line(x1, y1, x2, y2);
+                    case "rectangle" -> new Rectangle(x1, y1, x2, y2);
+                    default -> throw new IllegalStateException("Unexpected value: " + tokens[0]);
                 };
-
-                res.add(forme);
+                res.add(shape);
             });
         }
 
@@ -46,19 +46,15 @@ public class Drawing {
     }
 
     public void onclick(int x, int y) {
-        //on trie les distance et on prend la plus petite
-
-
-        //on modifie la shape selected
-        //on redessine
-
+        selected = shapes.stream()
+                .collect(Collectors.minBy(
+                        Comparator.comparingInt((Shape s) -> s.distanceSquaredTo(x, y))))
+                .orElse(null);
     }
 
     public void drawAll(Graphics2D graphics) {
-        Objects.requireNonNull(shapes);
-
-        graphics.setColor(Color.BLACK);
-        for(var shape : shapes) {
+        for (var shape : shapes) {
+            graphics.setColor(shape == selected ? Color.ORANGE : Color.BLACK);
             shape.draw(graphics);
         }
     }
