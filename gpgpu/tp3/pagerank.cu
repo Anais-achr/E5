@@ -17,15 +17,26 @@
 /* ------------ Pagerank computation, GPU part ------------ */
 
 __global__ void pr_init_gpu(float* pr){
-    // TODO: fill in initial value for pagerank
+    uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
+    if(idx < COUNT) {
+        pr[idx] = 1.0f/COUNT;
+    }
 }
 
 __global__ void pr_damping_gpu(float* pr){
-    // TODO: fill in (1 - damping constant) for pagerank
+    uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
+    if(idx < COUNT) {
+        pr[idx] = (1.0f-DAMPING)/COUNT;
+    }
 }
 
 __global__ void pr_iter_gpu(const uint2* links, const float* oldp, float* newp){
-    // TODO: add contributions for each link for pagerank
+    uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
+    if(idx < (uint32_t)COUNT*LINK_PER_PAGE) {
+        uint2 l = links[idx];
+        float contrib = DAMPING*oldp[l.x]/LINK_PER_PAGE;
+        atomicAdd(&newp[l.y], contrib); //on utilise atomicAdd car plusieurs lien peuvent pointer vers la même page et des contributions peuvent être perdue à cause des lectur et ecritures en meme temps
+    }
 }
 
 __global__ void pr_conv_check_gpu(const float* oldp, const float* newp, uint32_t* conv){
