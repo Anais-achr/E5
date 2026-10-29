@@ -1,3 +1,9 @@
+Anaïs 
+Aoucher
+E5 INFO
+
+
+TP 3 :  Synchronization and Performance
 
 
 Exercice 1 :
@@ -12,7 +18,7 @@ Problème : les threads font la même addition en même temps et elle n'est pas 
             Pour corriger ça il faut utiliser atomicAdd()
 
 
-resultat correction :
+resultat correction : (cf chaos1_corrige.cu)
 
 Computation time: 4.0730ms
 Result: 549755289600
@@ -22,10 +28,78 @@ chaos2 :
 
 Problème : on a un problmèe de synchonisation, car on peut acceder à la valru d'une case qui n'est pas encore remplie. 
            les threads ne vont pas tous forcément à la meme vitesse.
-           Pour corriger ça il faut ajouter __syncthreads()
+           
+           
+Pour corriger ça il faut ajouter __syncthreads() (cf chaos2_corrige.cu)
 
 
 
 Exercice 2 :
 
-Methode 1 : chaque thread parcourt le tableau, s'il trouve 42 alors on met 1, puis on additionne les threads entre eux pour avoir le total
+resultats :
+
+Finding 42 in 134217728 elements
+
+Shift 12, with 32911 elements equal to 42 to be found
+Method 1:  4.3456ms, found, returning 32911.
+Method 2:  3.5785ms, found, returning 32780.
+Method 3:  3.7415ms, found, returning 32911.
+Method 4:  0.2811ms, found, returning 1.
+
+Shift 16, with 2069 elements equal to 42 to be found
+Method 1:  4.3066ms, found, returning 2069.
+Method 2:  3.5543ms, found, returning 2069.
+Method 3:  3.4552ms, found, returning 2069.
+Method 4:  0.2840ms, found, returning 1.
+
+Shift 20, with 122 elements equal to 42 to be found
+Method 1:  4.2877ms, found, returning 122.
+Method 2:  3.5528ms, found, returning 122.
+Method 3:  3.8068ms, found, returning 122.
+Method 4:  1.2814ms, found, returning 1.
+
+Shift 24, with 5 elements equal to 42 to be found
+Method 1:  5.6056ms, found, returning 5.
+Method 2:  3.5592ms, found, returning 5.
+Method 3:  3.4563ms, found, returning 5.
+Method 4:  0.8031ms, found, returning 1.
+
+Shift 28, with 1 elements equal to 42 to be found
+Method 1:  5.0512ms, found, returning 1.
+Method 2:  4.3066ms, found, returning 1.
+Method 3:  3.4553ms, found, returning 1.
+Method 4:  4.2771ms, found, returning 1.
+
+Shift 32, with 0 elements equal to 42 to be found
+Method 1:  5.5989ms, not found, returning 0.
+Method 2:  3.5596ms, not found, returning 0.
+Method 3:  3.7914ms, not found, returning 0.
+Method 4:  4.5760ms, not found, returning 0.
+
+
+Methode 1 : chaque thread parcourt plusieurs cases du tableau et note ensuite dans une varibale locale 1 s'il trouve la valeur 42, sinon 0
+    Puis les 32 threads d'un wrap additionnent ensuite les valeur avec __shfl_down_sync, en gros chaque thread lit celle d'un autre thread du wrap
+    situé offset places plus loin avec des decalages. à la fin le thread 0 du wrap contient le total du wrap
+    le thread 0 cumule les totaux de chaque tour dans un compteur.
+
+
+Méthode 2 : Dans cette fonction chaque thread lit une case du tableau et note 1 si elle vaut 42, sinon 0. puis avec any_sync on demande au xrap entier si au 
+    moins un thread du wrap a trouvé un 42 (donc si au moins un thread a noté 1), si c'est le cas on incrémete un compteur de 1.
+    Donc ici le compteur donne le nombre de foi où un wrap a trouvé au moins 42.
+
+
+Methode 3 : Cette fonction fait un atomicAdd par thread, en effet chaque thread lit une case du tableau et s'il 42 est toruvé alors on ajotue 1 au compteur
+    avec un atomicAdd, les threads ne cooperent pas entre eux. 
+    Ce n'est pas très performant car les thread écrievtn en même temps à la même adresse, le resultats est correcte mais s'il y avait plus d'occurence de 
+    42 alors le temps d'execution augmenterait
+
+
+Méthode 4 : Avec cette méthode on vérifie juste si 42 st dans le tableau, on en ecompte pas les occurences, en effet on vérifie la valeur de res avant chaque 
+    tour de boucle, et du coup les threads s'arrêtent dès le premier résultat. Cette fonction est très rapide quand il y a beaucoup d'occurence mais s'il y en
+    a pas on doit parocurir quand même tout le tableau
+
+
+
+
+Problème 1 :
+
