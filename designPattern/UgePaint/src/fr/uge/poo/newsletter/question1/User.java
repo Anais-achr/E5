@@ -1,4 +1,4 @@
-package fr.uge.poo.newsletter;
+package fr.uge.poo.newsletter.question1;
 
 import java.util.Objects;
 

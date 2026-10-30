@@ -45,11 +45,24 @@ public class Newsletter {
         Predicate<User> predicatPotter = user -> (user.nationality() == User.Nationality.BRITISH && user.age() >= 18);
         var potterEver = new Newsletter("Potter 4ever", predicatPotter);
 
+        Predicate<User> predicatJava = user -> (
+                        (user.nationality() == User.Nationality.FRENCH || user.nationality() == User.Nationality.BRITISH)
+                        && user.age() >= 18);
+        var javaEver = new Newsletter("Java 4ever", predicatJava);
+
         Predicate<User> predicatWhyMe = user -> (user.age() % 2 == 0 && user.email().contains("@univ-eiffel.fr"));
         var wheMe = new Newsletter("Why me!", predicatWhyMe);
 
         var user1 = new User("theo", "theo@jesuisfou.haha", 114, User.Nationality.FRENCH);
         var user2 = new User("etiennnne", "etienne@@univ-eiffel.fr", 4, User.Nationality.BRITISH);
+
+        potterEver.suscribe("theo@jesuisfou.haha", user1);
+        javaEver.suscribe("theo@jesuisfou.haha", user1);
+        wheMe.suscribe("theo@jesuisfou.haha", user1);
+
+        potterEver.suscribe("etienne@@univ-eiffel.fr", user2);
+        javaEver.suscribe("etienne@@univ-eiffel.fr", user2);
+        wheMe.suscribe("etienne@@univ-eiffel.fr", user2);
     }
 }
 

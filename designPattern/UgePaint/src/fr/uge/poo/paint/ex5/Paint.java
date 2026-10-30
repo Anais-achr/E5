@@ -26,7 +26,7 @@ public class Paint {
             canvas = new CoolGraphicAdapter("cool", 800, 600);
         }
 
-        Path path = Paths.get("/Users/anaisaoucher/git/E5/designPattern/UgePaint/draw2.txt");
+        Path path = Paths.get("/home/26_epigep-in-5/anais.aoucher/Bureau/E5/designPattern/UgePaint/draw2.txt");
         var drawingFile = Drawing.fromFile(path);
 
         var paint = new Paint(canvas, drawingFile);
