@@ -81,7 +81,7 @@ float pr_compute_gpu(const uint2* links, float* pr){
     cudaFree(d_links);
     cudaFree(d_conv);
     
-    return finished;
+    return finished/1000.0f;
 }
 
 /* ------------ Pagerank computation, CPU part ------------ */
