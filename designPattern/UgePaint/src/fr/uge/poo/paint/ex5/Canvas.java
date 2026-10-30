@@ -1,20 +1,19 @@
 package fr.uge.poo.paint.ex5;
 
-import java.awt.*;
+
 
 public interface Canvas {
-    void clear(Color white);
-    void drawLine(Graphics2D graphics, int x1, int y1, int x2, int y2);
-    void drawRectangle(Graphics2D graphics, int x, int y, int width, int height);
-    void drawEllipse(Graphics2D graphics, int x, int y, int width, int height);
-    void onMouseClick(int x, int y);
-
-    void setColor(Color color);
+    void clear(Colors color);
+    void drawLine(int x1, int y1, int x2, int y2, Colors color);
+    void drawRectangle(int x, int y, int width, int height, Colors color);
+    void drawEllipse(int x, int y, int width, int height, Colors color);
 
     @FunctionalInterface
-    public interface MouseCallback {
+    interface MouseCallback {
         void mouseClicked(int x, int y);
     }
-    void waitForMouseEvents(MouseCallback mouseCallback);
+    void waitForMouseEvents(MouseCallback callback);
 }
+
+
 

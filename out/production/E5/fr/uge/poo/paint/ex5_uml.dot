@@ -1,0 +1,148 @@
+// Diagramme de classes UML de fr.uge.poo.paint.ex5 (état actuel du code)
+// Régénérer : dot -Tsvg ex5_uml.dot -o ex5_uml.svg && dot -Tpng -Gdpi=150 ex5_uml.dot -o ex5_uml.png
+// Visibilité : + public   - private   ~ package
+digraph ex5 {
+  graph [rankdir=TB, fontname="Helvetica", nodesep=0.6, ranksep=0.8, pad=0.4,
+         label="UgePaint – ex5 (diagramme de classes)", labelloc=t, fontsize=20];
+  node  [shape=plain, fontname="Helvetica", fontsize=11];
+  edge  [fontname="Helvetica", fontsize=10];
+
+  Paint [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFF8E1">
+<tr><td><b>Paint</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- canvas : Canvas {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ Paint(canvas : Canvas)<br/>+ <u>main(args : String[]) : void</u></td></tr>
+</table>>];
+
+  Drawing [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFF8E1">
+<tr><td><b>Drawing</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- shapes : List&lt;Shape&gt; {final}<br/>- selected : Shape</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- Drawing(shapes : List&lt;Shape&gt;)<br/>+ <u>fromFile(path : Path) : Drawing</u><br/>+ drawAll(canvas : Canvas) : void</td></tr>
+</table>>];
+
+  Shape [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E3F2FD">
+<tr><td>«interface» <i>sealed</i><br/><b><i>Shape</i></b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t"> </td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ <i>draw(graphics : Graphics2D) : void</i><br/>+ <i>distanceSquaredTo(x : int, y : int) : int</i></td></tr>
+</table>>];
+
+  Line [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E8F5E9">
+<tr><td>«record»<br/><b>Line</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- x1, y1, x2, y2 : int {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ draw(g : Graphics2D) : void<br/>+ distanceSquaredTo(px : int, py : int) : int</td></tr>
+</table>>];
+
+  Rectangle [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E8F5E9">
+<tr><td>«record»<br/><b>Rectangle</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- x1, y1, x2, y2 : int {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- box() : Box<br/>+ draw(g : Graphics2D) : void<br/>+ distanceSquaredTo(px : int, py : int) : int</td></tr>
+</table>>];
+
+  Ellipse [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E8F5E9">
+<tr><td>«record»<br/><b>~ Ellipse</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- x1, y1, x2, y2 : int {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- box() : Box<br/>+ draw(g : Graphics2D) : void<br/>+ distanceSquaredTo(px : int, py : int) : int</td></tr>
+</table>>];
+
+  Box [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E8F5E9">
+<tr><td>«record»<br/><b>~ Box</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- x1, y1, x2, y2 : int {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">~ x() : int<br/>~ y() : int<br/>~ width() : int<br/>~ height() : int<br/>~ distanceSquaredTo(px : int, py : int) : int</td></tr>
+</table>>];
+
+  Canvas [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E3F2FD">
+<tr><td>«interface»<br/><b><i>Canvas</i></b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t"> </td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ <i>clear(white : Color) : void</i><br/>+ <i>drawLine(graphics : Graphics2D, x1 : int, y1 : int, x2 : int, y2 : int) : void</i><br/>+ <i>drawRectangle(graphics : Graphics2D, x : int, y : int, width : int, height : int) : void</i><br/>+ <i>drawEllipse(graphics : Graphics2D, x : int, y : int, width : int, height : int) : void</i><br/>+ <i>onMouseClick(x : int, y : int) : void</i><br/>+ <i>setColor(color : Color) : void</i><br/>+ <i>waitForMouseEvents(mouseCallback : MouseCallback) : void</i></td></tr>
+</table>>];
+
+  CanvasMouseCallback [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#E3F2FD">
+<tr><td>«interface» «functional»<br/><b><i>Canvas.MouseCallback</i></b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ <i>mouseClicked(x : int, y : int) : void</i></td></tr>
+</table>>];
+
+  SimpleGraphicAdapter [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#F3E5F5">
+<tr><td>«final»<br/><b>SimpleGraphicAdapter</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- simpleGraphics : SimpleGraphics {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ clear(color : Color) : void<br/>+ drawLine(graphics : Graphics2D, ...) : void<br/>+ drawRectangle(graphics : Graphics2D, ...) : void<br/>+ drawEllipse(graphics : Graphics2D, ...) : void<br/>+ onMouseClick(x : int, y : int) : void<br/>+ waitForMouseEvents(cb : MouseCallback) : void<br/><font color="#C62828">setColor(...) : manquante</font></td></tr>
+</table>>];
+
+  CoolGraphicAdapter [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#F3E5F5">
+<tr><td>«final»<br/><b>CoolGraphicAdapter</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- coolGraphics : CoolGraphics {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ clear(white : Color) : void<br/>+ drawLine(graphics : Graphics2D, ...) : void<br/>+ drawRectangle(graphics : Graphics2D, ...) : void<br/>+ drawEllipse(graphics : Graphics2D, ...) : void<br/>+ onMouseClick(x : int, y : int) : void<br/>+ waitForMouseEvents(cb : MouseCallback) : void<br/><font color="#C62828">setColor(...) : manquante</font></td></tr>
+</table>>];
+
+  SimpleGraphics [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ECEFF1">
+<tr><td><font point-size="9">fr.uge.poo.simplegraphics</font><br/><b>SimpleGraphics</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- area : JComponent {final}<br/>- buffer : BufferedImage {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ SimpleGraphics(title : String, width : int, height : int)<br/>+ clear(color : Color) : void<br/>+ render(consumer : Consumer&lt;Graphics2D&gt;) : void<br/>+ waitForMouseEvents(cb : MouseCallback) : void<br/>+ close() : void</td></tr>
+</table>>];
+
+  CoolGraphics [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ECEFF1">
+<tr><td><b>CoolGraphics</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- area : JComponent {final}<br/>- buffer : BufferedImage {final}<br/>- <u>border : int = 10</u> {final}</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">+ CoolGraphics(title : String, width : int, height : int)<br/>+ repaint(color : ColorPlus) : void<br/>+ drawLine(x1, y1, x2, y2 : int, color : ColorPlus) : void<br/>+ drawEllipse(x, y, width, height : int, color : ColorPlus) : void<br/>+ waitForMouseEvents(cb : MouseCallback) : void<br/>+ close() : void</td></tr>
+</table>>];
+
+  ColorPlus [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ECEFF1">
+<tr><td>«enum»<br/><b>CoolGraphics.ColorPlus</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">RED, GREEN, ORANGE, BLUE, BLACK, WHITE...</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">- color : Color {final}</td></tr>
+</table>>];
+
+  Colors [label=<
+<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFEBEE">
+<tr><td>«enum»<br/><b>Colors</b></td></tr>
+<tr><td align="left" balign="left" border="1" sides="t">WHITE<br/>BLACK<br/>ORANGE</td></tr>
+<tr><td align="left" balign="left" border="1" sides="t"><font color="#C62828">non utilisé</font></td></tr>
+</table>>];
+
+  // Réalisation d'interface (pointillés + flèche creuse)
+  edge [style=dashed, arrowhead=onormal];
+  Line -> Shape; Rectangle -> Shape; Ellipse -> Shape;
+  SimpleGraphicAdapter -> Canvas; CoolGraphicAdapter -> Canvas;
+
+  // Classes imbriquées (⊕)
+  edge [style=solid, arrowhead=odot, dir=forward];
+  CanvasMouseCallback -> Canvas;
+  ColorPlus -> CoolGraphics;
+
+  // Composition (adaptateur possède l'adapté)
+  edge [style=solid, arrowhead=none, dir=back, arrowtail=diamond];
+  SimpleGraphicAdapter -> SimpleGraphics [label=" 1"];
+  CoolGraphicAdapter -> CoolGraphics [label=" 1"];
+
+  // Agrégation Drawing → Shape
+  edge [style=solid, dir=back, arrowtail=odiamond, arrowhead=vee];
+  Drawing -> Shape [dir=both, label=" shapes *\l selected 0..1\l"];
+
+  // Association Paint → Canvas
+  edge [style=solid, dir=forward, arrowhead=vee, arrowtail=none];
+  Paint -> Canvas [label=" canvas 1"];
+
+  // Dépendances (utilise / crée)
+  edge [style=dashed, arrowhead=vee];
+  Paint -> Drawing [label=" «create»"];
+  Paint -> SimpleGraphicAdapter [label=" «create»"];
+  Paint -> CoolGraphicAdapter [label=" «create»"];
+  Drawing -> Canvas [label=" drawAll()"];
+  Drawing -> Line [label=" «create»"];
+  Rectangle -> Box; Ellipse -> Box;
+  CoolGraphicAdapter -> ColorPlus [label=" «use»"];
+
+  { rank=same; Paint; Colors; }
+}

@@ -2,39 +2,60 @@ package fr.uge.poo.paint.ex5;
 
 import fr.uge.poo.simplegraphics.SimpleGraphics;
 
-import java.awt.*;
-import java.util.function.Consumer;
+import java.awt.Color;
+import java.util.Objects;
 
 public final class SimpleGraphicAdapter implements Canvas {
-    private final SimpleGraphics simpleGraphics = new SimpleGraphics("simple", 800, 600);
+    private final SimpleGraphics simpleGraphics;
 
-    @Override
-    public void clear(Color color) {
-        simpleGraphics.clear(color);
+    public SimpleGraphicAdapter(String title, int width, int height) {
+        simpleGraphics = new SimpleGraphics(title, width, height);
+    }
+
+    private static Color toAwtColor(Colors color) {
+        return switch (color) {
+            case WHITE -> Color.WHITE;
+            case BLACK -> Color.BLACK;
+            case ORANGE -> Color.ORANGE;
+        };
     }
 
     @Override
-    public void drawLine(Graphics2D graphics, int x1, int y1, int x2, int y2) {
-        graphics.drawLine(x1, y1, x2, y2);
+    public void clear(Colors color) {
+        Objects.requireNonNull(color);
+        simpleGraphics.clear(toAwtColor(color));
     }
 
     @Override
-    public void drawRectangle(Graphics2D graphics, int x, int y, int width, int height) {
-        graphics.drawRect(x, y, width, height);
+    public void drawLine(int x1, int y1, int x2, int y2, Colors color) {
+        Objects.requireNonNull(color);
+        simpleGraphics.render(graphics -> {
+            graphics.setColor(toAwtColor(color));
+            graphics.drawLine(x1, y1, x2, y2);
+        });
     }
 
     @Override
-    public void drawEllipse(Graphics2D graphics, int x, int y, int width, int height) {
-        graphics.drawOval(x, y, width, height);
+    public void drawRectangle(int x, int y, int width, int height, Colors color) {
+        Objects.requireNonNull(color);
+        simpleGraphics.render(graphics -> {
+            graphics.setColor(toAwtColor(color));
+            graphics.drawRect(x, y, width, height);
+        });
     }
 
     @Override
-    public void onMouseClick(int x, int y) {
-
+    public void drawEllipse(int x, int y, int width, int height, Colors color) {
+        Objects.requireNonNull(color);
+        simpleGraphics.render(graphics -> {
+            graphics.setColor(toAwtColor(color));
+            graphics.drawOval(x, y, width, height);
+        });
     }
 
     @Override
-    public void waitForMouseEvents(MouseCallback mouseCallback) {
-
+    public void waitForMouseEvents(MouseCallback callback) {
+        Objects.requireNonNull(callback);
+        simpleGraphics.waitForMouseEvents(callback::mouseClicked);
     }
 }

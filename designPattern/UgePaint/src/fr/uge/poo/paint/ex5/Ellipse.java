@@ -6,10 +6,11 @@ record Ellipse(int x1, int y1, int x2, int y2) implements Shape {
     private Box box() { return new Box(x1, y1, x2, y2); }
 
     @Override
-    public void draw(Graphics2D g) {
+    public void draw(Canvas canvas, Colors color) {
         var b = box();
-        g.drawOval(b.x(), b.y(), b.width(), b.height());
+        canvas.drawEllipse(b.x(), b.y(), b.width(), b.height(), color);
     }
+
 
     @Override
     public int distanceSquaredTo(int px, int py) {

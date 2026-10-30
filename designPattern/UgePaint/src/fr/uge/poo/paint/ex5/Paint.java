@@ -6,35 +6,38 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class Paint {
     private final Canvas canvas;
+    private final Drawing drawing;
 
-    public Paint(Canvas canvas) {
-        this.canvas = canvas;
+    public Paint(Canvas canvas, Drawing drawing) {
+        this.canvas = Objects.requireNonNull(canvas);
+        this.drawing = Objects.requireNonNull(drawing);
     }
 
-//    private static void callback(Canvas area, int x, int y) {
-//        area.onMouseClick(x, y);
-//        area.clear(Color.WHITE);
-//        //area.render(drawing::drawAll);
-//    }
 
     public static void main(String[] args) throws IOException {
         Canvas canvas;
         if (args.length == 1 && args[0].equals("-legacy")) {
-            canvas = new SimpleGraphicAdapter();
+            canvas = new SimpleGraphicAdapter("simple", 800, 600);
         } else {
-            canvas = new CoolGraphicAdapter();
+            canvas = new CoolGraphicAdapter("cool", 800, 600);
         }
 
-        Path path = Paths.get("/home/26_epigep-in-5/anais.aoucher/Bureau/E5/designPattern/UgePaint/draw2.txt");
-        var drawing = Drawing.fromFile(path);
+        Path path = Paths.get("/Users/anaisaoucher/git/E5/designPattern/UgePaint/draw2.txt");
+        var drawingFile = Drawing.fromFile(path);
 
-        var paint = new Paint(canvas);
+        var paint = new Paint(canvas, drawingFile);
 
-        canvas.clear(Color.WHITE);
-        drawing.drawAll();
-        canvas.waitForMouseEvents((x, y) -> callback(canvas, x, y));
+        paint.canvas.clear(Colors.WHITE);
+        paint.drawing.drawAll(paint.canvas);
+
+        paint.canvas.waitForMouseEvents((x, y) -> {
+            paint.drawing.onclick(x, y);
+            paint.canvas.clear(Colors.WHITE);
+            paint.drawing.drawAll(paint.canvas);
+        });
     }
 }

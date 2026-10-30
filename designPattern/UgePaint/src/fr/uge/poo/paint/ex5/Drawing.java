@@ -44,17 +44,17 @@ public class Drawing {
         return new Drawing(res);
     }
 
-//    public void onclick(int x, int y) {
-//        selected = shapes.stream()
-//                .collect(Collectors.minBy(
-//                        Comparator.comparingInt((Shape s) -> s.distanceSquaredTo(x, y))))
-//                .orElse(null);
-//    }
+    public void onclick(int x, int y) {
+        selected = shapes.stream()
+                .collect(Collectors.minBy(
+                        Comparator.comparingInt((Shape s) -> s.distanceSquaredTo(x, y))))
+                .orElse(null);
+    }
 
     public void drawAll(Canvas canvas) {
+        Objects.requireNonNull(canvas);
         for (var shape : shapes) {
-            canvas.setColor(shape == selected ? Color.ORANGE : Color.BLACK);
-            shape.draw();
+            shape.draw(canvas, shape == selected ? Colors.ORANGE : Colors.BLACK);
         }
     }
 }

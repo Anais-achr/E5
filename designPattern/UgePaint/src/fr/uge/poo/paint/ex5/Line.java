@@ -4,8 +4,8 @@ import java.awt.*;
 
 public record Line(int x1, int y1, int x2, int y2) implements Shape {
     @Override
-    public void draw(Graphics2D g) {
-        g.drawLine(x1, y1, x2, y2);
+    public void draw(Canvas canvas, Colors color) {
+        canvas.drawLine(x1, y1, x2, y2, color);
     }
 
     @Override
