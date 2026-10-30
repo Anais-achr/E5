@@ -103,3 +103,44 @@ Méthode 4 : Avec cette méthode on vérifie juste si 42 st dans le tableau, on 
 
 Problème 1 :
 
+resultat: 
+
+Finished generating graph
+
+GPU version, runtime 449.2742s
+Deviation: 0.892469
+Rank 0, index 2, normalized pagerank 0.0038004
+Rank 1, index 967, normalized pagerank 0.0029978
+Rank 2, index 89, normalized pagerank 0.0029314
+Rank 3, index 131, normalized pagerank 0.0028583
+Rank 4, index 0, normalized pagerank 0.0027151
+Rank 5, index 71, normalized pagerank 0.0025833
+Rank 6, index 286, normalized pagerank 0.0023212
+Rank 7, index 706, normalized pagerank 0.0022366
+Rank 8, index 754, normalized pagerank 0.0021530
+Rank 9, index 228, normalized pagerank 0.0021358
+Rank 10, index 241, normalized pagerank 0.0018929
+Rank 11, index 34, normalized pagerank 0.0018178
+Rank 12, index 1011, normalized pagerank 0.0017787
+Rank 13, index 515, normalized pagerank 0.0017578
+Rank 14, index 480, normalized pagerank 0.0017329
+Rank 15, index 555, normalized pagerank 0.0017290
+
+CPU version, runtime  3.1264s
+Deviation: 0.892469
+Rank 0, index 2, normalized pagerank 0.0038004
+Rank 1, index 967, normalized pagerank 0.0029978
+Rank 2, index 89, normalized pagerank 0.0029314
+Rank 3, index 131, normalized pagerank 0.0028583
+Rank 4, index 0, normalized pagerank 0.0027151
+Rank 5, index 71, normalized pagerank 0.0025833
+Rank 6, index 286, normalized pagerank 0.0023212
+Rank 7, index 706, normalized pagerank 0.0022366
+Rank 8, index 754, normalized pagerank 0.0021530
+Rank 9, index 228, normalized pagerank 0.0021358
+Rank 10, index 241, normalized pagerank 0.0018929
+Rank 11, index 34, normalized pagerank 0.0018178
+Rank 12, index 1011, normalized pagerank 0.0017787
+Rank 13, index 515, normalized pagerank 0.0017578
+Rank 14, index 480, normalized pagerank 0.0017329
+Rank 15, index 555, normalized pagerank 0.0017290

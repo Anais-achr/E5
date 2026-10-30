@@ -39,7 +39,7 @@ __global__ void pr_iter_gpu(const uint2* links, const float* oldp, float* newp){
 
 __global__ void pr_conv_check_gpu(const float* oldp, const float* newp, uint32_t* conv){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
-    if(fabsf(newp[idx] - oldp[idx]) < EPSILON) {
+    if(fabsf(newp[idx] - oldp[idx]) > EPSILON) {
         *conv = 1;
     }
 }
