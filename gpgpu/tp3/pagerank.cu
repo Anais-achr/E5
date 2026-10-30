@@ -18,16 +18,14 @@
 
 __global__ void pr_init_gpu(float* pr){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
-    if(idx < COUNT) {
-        pr[idx] = 1.0f/COUNT;
-    }
+    pr[idx] = 1.0f/COUNT;
+    
 }
 
 __global__ void pr_damping_gpu(float* pr){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
-    if(idx < COUNT) {
-        pr[idx] = (1.0f-DAMPING)/COUNT;
-    }
+    pr[idx] = (1.0f-DAMPING)/COUNT;
+    
 }
 
 __global__ void pr_iter_gpu(const uint2* links, const float* oldp, float* newp){
@@ -40,33 +38,109 @@ __global__ void pr_iter_gpu(const uint2* links, const float* oldp, float* newp){
 }
 
 __global__ void pr_conv_check_gpu(const float* oldp, const float* newp, uint32_t* conv){
-    // TODO: check for convergence against 
+    uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
+    if(fabsf(newp[idx] - oldp[idx]) < EPSILON) {
+        *conv = 1;
+    }
 }
 
 float pr_compute_gpu(const uint2* links, float* pr){
-    // TODO: control GPU computation, returns computation time (in seconds, not counting memory transfer time)
+   float* oldp, *newp;
+   uint2 *d_links;
+   uint32_t  *d_conv, conv;
+
+   cudaMalloc(&oldp, sizeof(float)*COUNT);
+   cudaMalloc(&newp, sizeof(float)*COUNT);
+   cudaMalloc(&d_links, sizeof(uint2)*COUNT*LINK_PER_PAGE);
+   cudaMalloc(&d_conv, sizeof(uint32_t));
+   cudaMemcpy(d_links, links, sizeof(uint2)*COUNT*LINK_PER_PAGE, cudaMemcpyHostToDevice);
+
+   cuStopwatch stopWatch;
+    stopWatch.start();
+
+    pr_init_gpu<<<COUNT/256, 256>>>(oldp);
+
+    while(1) {
+        pr_damping_gpu<<<COUNT/256, 256>>>(newp);
+        pr_iter_gpu<<<COUNT*LINK_PER_PAGE/256, 256>>>(d_links, oldp, newp);
+        cudaMemset(d_conv, 0, sizeof(uint32_t));
+        pr_conv_check_gpu<<<COUNT/256, 256>>>(oldp, newp, d_conv);
+        cudaMemcpy(&conv, d_conv, sizeof(uint32_t), cudaMemcpyDeviceToHost);
+        if(!conv) {
+            break;
+        }
+        float *tmp = oldp;
+        oldp = newp;
+        newp = tmp;
+    }
+
+    float finished = stopWatch.stop();
+    cudaMemcpy(pr, newp, sizeof(float)*COUNT, cudaMemcpyDeviceToHost);
+    cudaFree(oldp);
+    cudaFree(newp);
+    cudaFree(d_links);
+    cudaFree(d_conv);
+    
+    return finished;
 }
 
 /* ------------ Pagerank computation, CPU part ------------ */
 
 void pr_init_cpu(float* pr){
-    // TODO: equivalence of pr_init_gpu on host
+    for(uint32_t i = 0; i < COUNT; i++) {
+        pr[i] = 1.0f/COUNT;
+    }
 }
 
 void pr_damping_cpu(float* pr){
-    // TODO: equivalence of pr_damping_gpu on host
+    for(uint32_t i = 0; i < COUNT; i++) {
+        pr[i] = (1.0f-DAMPING)/COUNT;
+    }
 }
 
 void pr_iter_cpu(const uint2* links, const float* oldp, float* newp){
-    // TODO: equivalenc of pr_iter_gpu on host
+    for(uint32_t i = 0; i < (uint32_t)COUNT*LINK_PER_PAGE; i++) {
+        newp[links[i].y] += DAMPING*oldp[links[i].x]/LINK_PER_PAGE;
+    }
 }
 
 void pr_conv_check_cpu(const float* oldp, const float* newp, uint32_t* conv){
-    // TODO: equivalence of pr_conv_check_gpu on host
+    for(uint32_t i = 0; i < COUNT; i++) {
+        if(fabs(newp[i] - oldp[i]) > EPSILON) {
+            *conv = 1;
+        }
+    } 
 }
 
 float pr_compute_cpu(const uint2* links, float* pr){
-    // TODO: equivalence of pr_compute_gpu on host
+   float *oldp = (float*)malloc(sizeof(float)*COUNT);
+   float *newp = (float*)malloc(sizeof(float)*COUNT);
+   uint32_t conv;
+
+   cuStopwatch stopwatch;
+   stopwatch.start();
+
+    pr_init_cpu(oldp);
+    while(1) {
+        pr_damping_cpu(newp);
+        pr_iter_cpu(links, oldp, newp);
+        conv = 0;
+        pr_conv_check_cpu(oldp, newp, &conv);
+        if(!conv) {
+            break;
+        }
+        float *tmp = oldp;
+        oldp = newp;
+        newp = tmp;
+    }
+
+    float finished = stopwatch.stop();
+
+    memcpy(pr, newp, sizeof(float)*COUNT);
+    free(oldp);
+    free(newp);
+
+    return finished/1000.0f;
 }
 
 /* ------------ Random graph generation ------------ */
