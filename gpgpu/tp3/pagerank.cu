@@ -16,18 +16,21 @@
 
 /* ------------ Pagerank computation, GPU part ------------ */
 
+//etaope 1 : on itinialise le tableau oldp
 __global__ void pr_init_gpu(float* pr){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
     pr[idx] = 1.0f/COUNT;
     
 }
 
+//etape 2 : on itnialise newp
 __global__ void pr_damping_gpu(float* pr){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
     pr[idx] = (1.0f-DAMPING)/COUNT;
     
 }
 
+// etape 3 : chaque thread s'occupe dun lien et envoie sa part de pagerank vers la page vise
 __global__ void pr_iter_gpu(const uint2* links, const float* oldp, float* newp){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
     if(idx < (uint32_t)COUNT*LINK_PER_PAGE) {
@@ -37,6 +40,7 @@ __global__ void pr_iter_gpu(const uint2* links, const float* oldp, float* newp){
     }
 }
 
+//etape de la verification
 __global__ void pr_conv_check_gpu(const float* oldp, const float* newp, uint32_t* conv){
     uint32_t idx = blockIdx.x*blockDim.x+threadIdx.x;
     if(fabsf(newp[idx] - oldp[idx]) > EPSILON) {
@@ -45,10 +49,11 @@ __global__ void pr_conv_check_gpu(const float* oldp, const float* newp, uint32_t
 }
 
 float pr_compute_gpu(const uint2* links, float* pr){
-   float* oldp, *newp;
-   uint2 *d_links;
+   float* oldp, *newp; //tableau iteration avant et en cours
+   uint2 *d_links; //liens
    uint32_t  *d_conv, conv;
 
+   //on alloc tous les trucs necesaire
    cudaMalloc(&oldp, sizeof(float)*COUNT);
    cudaMalloc(&newp, sizeof(float)*COUNT);
    cudaMalloc(&d_links, sizeof(uint2)*COUNT*LINK_PER_PAGE);

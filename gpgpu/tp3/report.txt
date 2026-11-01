@@ -6,7 +6,7 @@ E5 INFO
 TP 3 :  Synchronization and Performance
 
 
-Exercice 1 :
+-------- Exercice 1 : --------
 
 chaos1.cu : 
 
@@ -34,7 +34,7 @@ Pour corriger ça il faut ajouter __syncthreads() (cf chaos2_corrige.cu)
 
 
 
-Exercice 2 :
+-------- Exercice 2 : --------
 
 resultats :
 
@@ -101,7 +101,7 @@ Méthode 4 : Avec cette méthode on vérifie juste si 42 st dans le tableau, on 
 
 
 
-Problème 1 :
+-------- Problème 1 : --------
 
 resultat: 
 
@@ -144,3 +144,27 @@ Rank 12, index 49, normalized pagerank 0.0019676
 Rank 13, index 611, normalized pagerank 0.0019342
 Rank 14, index 706, normalized pagerank 0.0018848
 Rank 15, index 22, normalized pagerank 0.0018525
+
+Observations :
+    - le GPU et CPU donnent le smêmes pages et dns le même ordre et avec les mêmes valeurs.
+    - le GPU est beucoup plsu rapide : 0.4565 s contre 3.1604 s
+    - la déviation est la même pour le GPU et le CPU, mais elle ne vaut pas 1
+
+
+
+Je me suis posé 2 questions :
+
+1. Pourquoi la déviation n'est pas à 1
+
+Le problème vient du fait qu'on utilise des float ici, en effet un float garde qu'environ 7 chiffres
+Le total est deja grand donc ajouter un tout petit nombre ne changerai rien. (à tester avec d'autres typse)
+
+
+2. Pourquoi le gpu est plus rapide ici ?
+
+Chaque lien se calcule indépendamment des autre, en effet le GPU traite des
+milliers de liens en même temps (un thread par lien), alors que le CPU les traite un
+par un dans une boucle
+
+
+(https://fr.wikipedia.org/wiki/Virgule_flottante)
