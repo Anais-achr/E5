@@ -122,8 +122,10 @@ float pr_compute_cpu(const uint2* links, float* pr){
    float *newp = (float*)malloc(sizeof(float)*COUNT);
    uint32_t conv;
 
-   cuStopwatch stopwatch;
-   stopwatch.start();
+   //cuStopwatch stopwatch;
+   //stopwatch.start();
+
+   clock_t debut = clock();
 
     pr_init_cpu(oldp);
     while(1) {
@@ -139,13 +141,15 @@ float pr_compute_cpu(const uint2* links, float* pr){
         newp = tmp;
     }
 
-    float finished = stopwatch.stop();
+    clock_t fin = clock();
 
+
+    float secondes = (float)(fin - debut) / CLOCKS_PER_SEC;
     memcpy(pr, newp, sizeof(float)*COUNT);
     free(oldp);
     free(newp);
 
-    return finished/1000.0f;
+    return secondes;
 }
 
 /* ------------ Random graph generation ------------ */
