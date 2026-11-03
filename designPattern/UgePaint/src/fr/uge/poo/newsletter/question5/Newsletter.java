@@ -1,0 +1,85 @@
+package fr.uge.poo.newsletter.question5;
+
+import java.util.*;
+import java.util.function.Predicate;
+
+public class Newsletter {
+    private final String name;
+    private final Map<String, User> suscribers;
+    private final Predicate<User> predicat;
+    private final List<NewsletterObserver> observers = new ArrayList<>();
+
+    public Newsletter(String name) {
+        Objects.requireNonNull(name);
+        this.name = name;
+        this.suscribers = new HashMap<>();
+        this.predicat = user -> true;
+    }
+
+    public Newsletter(String name, Predicate<User> predicat) {
+        Objects.requireNonNull(name);
+        this.name = name;
+        this.suscribers = new HashMap<>();
+        this.predicat = predicat;
+    }
+
+
+    private void suscribe(String userEmail, User user) {
+        if(predicat.test(user)) {
+            suscribers.computeIfAbsent(userEmail, mail -> new User(user.name(), userEmail, user.age(), user.nationality()));
+        } else {
+            System.err.println("tu peux pas hahahahaha looooser");
+        }
+        notifyOnSuscribe();
+    }
+
+    private void unsuscribe(String userEmail) {
+        suscribers.remove(userEmail);
+        notifyOnUnSuscribe();
+    }
+
+    void sendMessage(String title, String content) {
+        suscribers.entrySet().stream().map(_ -> "[" + name + "] " + title);
+    }
+
+    public void register(NewsletterObserver observer) {
+        observers.add(Objects.requireNonNull(observer));
+    }
+
+    public void unRegister(NewsletterObserver observer) {
+        if (!observers.remove(Objects.requireNonNull(observer))) {
+            throw new IllegalStateException(); }
+    }
+
+    private void notifyOnSuscribe() {
+        for(var obs : observers) {
+            obs.onSuscribe();
+        }
+    }
+
+    private void notifyOnUnSuscribe() {
+        for(var obs : observers) {
+            obs.onUnsuscribe(this);
+        }
+    }
+
+    public static void main(String[] args) {
+        Predicate<User> predicatPotter = user -> (user.nationality() == User.Nationality.BRITISH && user.age() >= 18);
+        var potterEver = new Newsletter("Potter 4ever", predicatPotter);
+
+        Predicate<User> predicatWhyMe = user -> (user.age() % 2 == 0 && user.email().contains("@univ-eiffel.fr"));
+        var wheMe = new Newsletter("Why me!", predicatWhyMe);
+
+        var user1 = new User("theo", "theo@jesuisfou.haha", 114, User.Nationality.FRENCH);
+        var user2 = new User("etiennnne", "etienne@@univ-eiffel.fr", 4, User.Nationality.BRITISH);
+
+        potterEver.suscribe("theo@jesuisfou.haha", user1);
+        wheMe.suscribe("theo@jesuisfou.haha", user1);
+
+        potterEver.suscribe("etienne@@univ-eiffel.fr", user2);
+        wheMe.suscribe("etienne@@univ-eiffel.fr", user2);
+    }
+}
+
+
+

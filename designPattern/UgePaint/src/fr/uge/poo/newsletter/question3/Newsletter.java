@@ -1,14 +1,15 @@
 package fr.uge.poo.newsletter.question3;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import fr.uge.poo.newsletter.question5.NewsletterObserver;
+
+import java.util.*;
 import java.util.function.Predicate;
 
 public class Newsletter {
     private final String name;
     private final Map<String, User> suscribers;
     private final Predicate<User> predicat;
+    private final List<NewsletterObserver> observers = new ArrayList<>();
 
     public Newsletter(String name) {
         Objects.requireNonNull(name);
