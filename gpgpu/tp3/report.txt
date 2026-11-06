@@ -107,43 +107,43 @@ resultat:
 
 Finished generating graph
 
-GPU version, runtime  0.4565s
-Deviation: 0.892413
-Rank 0, index 519, normalized pagerank 0.0024706
-Rank 1, index 34, normalized pagerank 0.0024631
-Rank 2, index 657, normalized pagerank 0.0024423
-Rank 3, index 55, normalized pagerank 0.0023841
-Rank 4, index 785, normalized pagerank 0.0023576
-Rank 5, index 988, normalized pagerank 0.0023328
-Rank 6, index 497, normalized pagerank 0.0021900
-Rank 7, index 117, normalized pagerank 0.0021865
-Rank 8, index 0, normalized pagerank 0.0021638
-Rank 9, index 293, normalized pagerank 0.0020854
-Rank 10, index 10, normalized pagerank 0.0020448
-Rank 11, index 386, normalized pagerank 0.0020272
-Rank 12, index 49, normalized pagerank 0.0019676
-Rank 13, index 611, normalized pagerank 0.0019342
-Rank 14, index 706, normalized pagerank 0.0018848
-Rank 15, index 22, normalized pagerank 0.0018525
+GPU version, runtime  0.4300s
+Deviation: 0.892584
+Rank 0, index 540, normalized pagerank 0.0028794
+Rank 1, index 515, normalized pagerank 0.0027417
+Rank 2, index 386, normalized pagerank 0.0023334
+Rank 3, index 116, normalized pagerank 0.0022420
+Rank 4, index 913, normalized pagerank 0.0020649
+Rank 5, index 94, normalized pagerank 0.0020608
+Rank 6, index 233, normalized pagerank 0.0019562
+Rank 7, index 298, normalized pagerank 0.0019299
+Rank 8, index 15, normalized pagerank 0.0019184
+Rank 9, index 32, normalized pagerank 0.0019101
+Rank 10, index 225, normalized pagerank 0.0018710
+Rank 11, index 802, normalized pagerank 0.0018615
+Rank 12, index 305, normalized pagerank 0.0018536
+Rank 13, index 385, normalized pagerank 0.0018353
+Rank 14, index 148, normalized pagerank 0.0018300
+Rank 15, index 927, normalized pagerank 0.0018259
 
-CPU version, runtime  3.1604s
-Deviation: 0.892413
-Rank 0, index 519, normalized pagerank 0.0024706
-Rank 1, index 34, normalized pagerank 0.0024631
-Rank 2, index 657, normalized pagerank 0.0024423
-Rank 3, index 55, normalized pagerank 0.0023841
-Rank 4, index 785, normalized pagerank 0.0023576
-Rank 5, index 988, normalized pagerank 0.0023328
-Rank 6, index 497, normalized pagerank 0.0021900
-Rank 7, index 117, normalized pagerank 0.0021865
-Rank 8, index 0, normalized pagerank 0.0021638
-Rank 9, index 293, normalized pagerank 0.0020854
-Rank 10, index 10, normalized pagerank 0.0020448
-Rank 11, index 386, normalized pagerank 0.0020272
-Rank 12, index 49, normalized pagerank 0.0019676
-Rank 13, index 611, normalized pagerank 0.0019342
-Rank 14, index 706, normalized pagerank 0.0018848
-Rank 15, index 22, normalized pagerank 0.0018525
+CPU version, runtime  3.0763s
+Deviation: 0.892584
+Rank 0, index 540, normalized pagerank 0.0028794
+Rank 1, index 515, normalized pagerank 0.0027417
+Rank 2, index 386, normalized pagerank 0.0023334
+Rank 3, index 116, normalized pagerank 0.0022420
+Rank 4, index 913, normalized pagerank 0.0020649
+Rank 5, index 94, normalized pagerank 0.0020608
+Rank 6, index 233, normalized pagerank 0.0019562
+Rank 7, index 298, normalized pagerank 0.0019299
+Rank 8, index 15, normalized pagerank 0.0019184
+Rank 9, index 32, normalized pagerank 0.0019101
+Rank 10, index 225, normalized pagerank 0.0018710
+Rank 11, index 802, normalized pagerank 0.0018615
+Rank 12, index 305, normalized pagerank 0.0018536
+Rank 13, index 385, normalized pagerank 0.0018353
+Rank 14, index 148, normalized pagerank 0.0018300
+Rank 15, index 927, normalized pagerank 0.0018259
 
 Observations :
     - le GPU et CPU donnent le smêmes pages et dns le même ordre et avec les mêmes valeurs.
