@@ -53,13 +53,13 @@ public class Newsletter {
 
     private void notifyOnSuscribe() {
         for(var obs : observers) {
-            obs.onSuscribe();
+            //obs.onSuscribe();
         }
     }
 
     private void notifyOnUnSuscribe() {
         for(var obs : observers) {
-            obs.onUnsuscribe(this);
+            //obs.onUnsuscribe(this);
         }
     }
 

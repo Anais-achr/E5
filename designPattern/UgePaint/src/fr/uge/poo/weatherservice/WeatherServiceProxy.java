@@ -1,11 +1,11 @@
 package fr.uge.poo.weatherservice;
 
 public class WeatherServiceProxy implements WeatherService{
-    private final WeatherServiceNTS service;
+    //private final WeatherServiceNTS service;
     private final Object lock;
 
     public WeatherServiceProxy() {
-        service = new WeatherServiceNTS();
+        //service = new WeatherServiceNTS();
         lock = new Object();
         super();
     }
@@ -13,7 +13,8 @@ public class WeatherServiceProxy implements WeatherService{
     @Override
     public int query(String city) {
         synchronized (lock) {
-            return service.query(city);
+            //return service.query(city);
         }
+        return 0;
     }
 }
