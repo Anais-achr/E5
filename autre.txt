@@ -1,0 +1,11 @@
+"terminal.integrated.profiles.windows": {
+  "VS Dev PowerShell": {
+    "source": "PowerShell",
+    "args": [
+      "-NoExit",
+      "-Command",
+      "& { $p = & 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe' -latest -products * -property installationPath; & \"$p\\Common7\\Tools\\Launch-VsDevShell.ps1\" -Arch amd64 -SkipAutomaticLocation }"
+    ]
+  }
+},
+"terminal.integrated.defaultProfile.windows": "VS Dev PowerShell"
