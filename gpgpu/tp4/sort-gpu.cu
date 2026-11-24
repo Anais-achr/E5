@@ -6,6 +6,7 @@
 #include <ctime>
 #include <stdint.h>
 #include <time.h>
+#include "cuStopwatch.cu"
 
 void randgen(uint64_t* arr, size_t count){
     uint64_t state = time(NULL);
@@ -26,6 +27,9 @@ void randgen(uint64_t* arr, size_t count){
 }
 
 
+int THREADS_PAR_BLOC = 256;
+float temps_transferts_ms, temps_kernels_ms;
+
 void sort_gpu(uint64_t* arr, uint32_t size){
     size_t nombre_elements = size;
     int nombre_de_blocs = (nombre_elements + THREADS_PAR_BLOC - 1) / THREADS_PAR_BLOC;
@@ -33,11 +37,11 @@ void sort_gpu(uint64_t* arr, uint32_t size){
     temps_transferts_ms = temps_kernels_ms = 0;
 
     uint64_t *tableau_gpu, *tableau_gpu_sortie;
-    uint32_t *zeros_avant_dans_bloc_gpu, *blocs_gpu;   // blocs_gpu : d'abord les totaux, puis "Blocs d'avant"
-    cudaMalloc(&tableau_gpu,               nombre_elements * sizeof(uint64_t));
-    cudaMalloc(&tableau_gpu_sortie,        nombre_elements * sizeof(uint64_t));
+    uint32_t *zeros_avant_dans_bloc_gpu, *blocs_gpu; 
+    cudaMalloc(&tableau_gpu, nombre_elements * sizeof(uint64_t));
+    cudaMalloc(&tableau_gpu_sortie, nombre_elements * sizeof(uint64_t));
     cudaMalloc(&zeros_avant_dans_bloc_gpu, nombre_elements * sizeof(uint32_t));
-    cudaMalloc(&blocs_gpu,                 nombre_de_blocs * sizeof(uint32_t));
+    cudaMalloc(&blocs_gpu, nombre_de_blocs * sizeof(uint32_t));
     uint32_t* blocs_cpu = new uint32_t[nombre_de_blocs];
 
     chrono.start();
@@ -54,7 +58,7 @@ void sort_gpu(uint64_t* arr, uint32_t size){
         cudaMemcpy(blocs_cpu, blocs_gpu, nombre_de_blocs * sizeof(uint32_t), cudaMemcpyDeviceToHost);
         temps_transferts_ms += chrono.stop();
 
-        uint32_t somme = 0;   // totaux -> "Blocs d'avant" (somme courante)
+        uint32_t somme = 0; 
         for(int b = 0; b < nombre_de_blocs; b++){
             uint32_t total_du_bloc = blocs_cpu[b];
             blocs_cpu[b] = somme;
@@ -70,10 +74,10 @@ void sort_gpu(uint64_t* arr, uint32_t size){
             tableau_gpu, tableau_gpu_sortie, zeros_avant_dans_bloc_gpu, blocs_gpu, nombre_elements, numero_du_bit, somme);
         temps_kernels_ms += chrono.stop();
 
-        swap(tableau_gpu, tableau_gpu_sortie);   // la sortie devient l'entrée de la passe suivante
+        std::swap(tableau_gpu, tableau_gpu_sortie); 
     }
 
-    chrono.start();   // après 64 passes (nombre pair), le résultat est dans tableau_gpu
+    chrono.start();   
     cudaMemcpy(arr, tableau_gpu, nombre_elements * sizeof(uint64_t), cudaMemcpyDeviceToHost);
     temps_transferts_ms += chrono.stop();
 
