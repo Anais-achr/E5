@@ -1,9 +1,13 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include "cuStopwatch.cu"
+
+#define TAILLE_BLOC 256      
+#define MASQUE 0xffffffff   
 
 void randgen(uint64_t* arr, size_t count){
     uint64_t state = time(NULL);
@@ -20,171 +24,285 @@ void randgen(uint64_t* arr, size_t count){
         state ^= state << 17;
         arr[i] = state;
     }
-    return;
 }
 
 
-int THREADS_PAR_BLOC = 256;
+//================= V1 =======================
 
-__global__ void compter_zero_bloc(const uint64_t *tableau, uint32_t *zeros_avant_moi_dans_bloc, uint32_t *total_du_bloc, size_t nombre_elements, int numero_du_bit) {
-    size_t debut_du_bloc = (size_t)blockIdx.x*blockDim.x;
-    size_t mon_indice = debut_du_bloc+threadIdx.x;
+//etape 1chaque thread compte les zéros avant lui dans son bloc
+__global__ void compter_v1(const uint64_t* tab, uint32_t* zeros_bloc, uint32_t* total_bloc, size_t taille, int bit){
+    size_t debut = (size_t)blockIdx.x * blockDim.x;
+    size_t i = debut + threadIdx.x;
+    if(i >= taille) return;
 
-    if(mon_indice >= nombre_elements) return;
-
-    uint32_t zero_avant_moi = 0;
-    for(size_t j = debut_du_bloc; j < mon_indice; j++) {
-        if(((tableau[j] >> numero_du_bit) &1) == 0) {
-            zero_avant_moi++;
-        }
-        zeros_avant_moi_dans_bloc[mon_indice] = zero_avant_moi;
+    uint32_t avant = 0;
+    for(size_t j = debut; j < i; j++){
+        if(((tab[j] >> bit) & 1) == 0) avant++;
     }
+    zeros_bloc[i] = avant;
 
-    bool dernier_du_bloc = (threadIdx.x == blockDim.x - 1) || (mon_indice == nombre_elements - 1);
-    if(dernier_du_bloc) {
-        uint32_t je_suis_un_zero = ((tableau[mon_indice] >> numero_du_bit) & 1) == 0;
-        total_du_bloc[blockIdx.x] = zero_avant_moi+je_suis_un_zero;
+    //dernier thread du bloc =>ecrit le total du bloc
+    if(threadIdx.x == blockDim.x - 1 || i == taille - 1){
+        uint32_t est_zero = ((tab[i] >> bit) & 1) == 0;
+        total_bloc[blockIdx.x] = avant + est_zero;
     }
 }
 
-__global__ void placer_nombre(const uint64_t *entree, uint64_t *sortie, const uint32_t *zeros_avant_dans_bloc, const uint32_t *bloc_d_avant, size_t nombre_elements, int numero_du_bit, uint32_t total_zero) {
-    size_t mon_indice = (size_t)blockIdx.x*blockDim.x+threadIdx.x;
-    if(mon_indice >= nombre_elements) return;
+//etape3 : chaque thread ecrit son nnnmbre à sa case
+__global__ void placer(const uint64_t* entree, uint64_t* sortie, const uint32_t* zeros_bloc, const uint32_t* decalage, size_t taille, int bit){
+    size_t i = (size_t)blockIdx.x * blockDim.x + threadIdx.x;
+    if(i >= taille) return;
 
-    uint64_t mon_nombre = entree[mon_indice];
-    uint64_t zero_avant_moi = zeros_avant_dans_bloc[mon_indice]+bloc_d_avant[blockIdx.x];
+    uint32_t total = decalage[gridDim.x];// nombre total de 0
+    uint32_t zeros_avant = zeros_bloc[i] + decalage[blockIdx.x];
+    uint64_t val = entree[i];
 
-    if((mon_nombre >> numero_du_bit & 1) == 0) {
-        sortie[zero_avant_moi] = mon_nombre;
+    if(((val >> bit) & 1) == 0) {
+        sortie[zeros_avant] = val;
     } else {
-        sortie[total_zero+mon_indice-zero_avant_moi] = mon_nombre;
+        sortie[total + i - zeros_avant] = val;
     }
 }
 
 
-void sort_gpu(uint64_t* arr, uint32_t size){
-    size_t nombre_elements = size;
-    int nombre_de_blocs = (nombre_elements + THREADS_PAR_BLOC - 1) / THREADS_PAR_BLOC;
-    cuStopwatch chrono;
+//================= V2 =======================
 
-    uint64_t *tableau_gpu, *tableau_gpu_sortie;
-    uint32_t *zeros_avant_dans_bloc_gpu, *blocs_gpu; 
-    cudaMalloc(&tableau_gpu, nombre_elements * sizeof(uint64_t));
-    cudaMalloc(&tableau_gpu_sortie, nombre_elements * sizeof(uint64_t));
-    cudaMalloc(&zeros_avant_dans_bloc_gpu, nombre_elements * sizeof(uint32_t));
-    cudaMalloc(&blocs_gpu, nombre_de_blocs * sizeof(uint32_t));
-    uint32_t* blocs_cpu = new uint32_t[nombre_de_blocs];
+//etape 1
+__global__ void compter_v2(const uint64_t* tab, uint32_t* zeros_bloc, uint32_t* total_bloc, size_t taille, int bit){
+    int lane = threadIdx.x;
+    size_t debut = (size_t)blockIdx.x * TAILLE_BLOC;
+    uint32_t zeros_tours_avant = 0;
+
+    for(int tour = 0; tour < TAILLE_BLOC / 32; tour++){
+        size_t i = debut + tour * 32 + lane;
+
+        uint32_t est_zero = (i < taille) && (((tab[i] >> bit) & 1) == 0);
+
+        // somme des est_zero de la lane 0 jusqu'à moi : à chaque étape on récupère
+        // la somme du thread d places à gauche en doublant d (1, 2, 4, 8, 16) 
+        uint32_t somme = est_zero;
+        for(int d = 1; d < 32; d *= 2){
+            uint32_t voisin = __shfl_up_sync(MASQUE, somme, d);
+            if(lane >= d) somme += voisin;
+        }
+
+        if(i < taille) zeros_bloc[i] = zeros_tours_avant + somme - est_zero;
+
+        zeros_tours_avant += __shfl_sync(MASQUE, somme, 31);
+    }
+    if(lane == 0) total_bloc[blockIdx.x] = zeros_tours_avant;
+}
+
+// etpae2:on transforme les totaux des blocs en decalage dans un werap
+__global__ void cumuler(uint32_t* decalage, int nb_blocs){
+    int lane = threadIdx.x;
+    uint32_t zeros_paquets_avant = 0;
+
+    for(int debut = 0; debut < nb_blocs; debut += 32){
+        int b = debut + lane;
+        uint32_t total = (b < nb_blocs) ? decalage[b] : 0;
+
+        //comme dans la v1 etape 1 mais sur les totaux des blocs
+        uint32_t somme = total;
+        for(int d = 1; d < 32; d *= 2){
+            uint32_t voisin = __shfl_up_sync(MASQUE, somme, d);
+            if(lane >= d) somme += voisin;
+        }
+
+        if(b < nb_blocs){
+            decalage[b] = zeros_paquets_avant + somme - total;
+        } 
+        zeros_paquets_avant += __shfl_sync(MASQUE, somme, 31);
+    }
+    if(lane == 0){
+        decalage[nb_blocs] = zeros_paquets_avant;
+    } 
+}
+
+
+
+void sort_gpu_v1(uint64_t* arr, size_t taille){
+    int nb_blocs = (taille + TAILLE_BLOC - 1) / TAILLE_BLOC;
+    cuStopwatch chrono;
+    float t_copies = 0, t_etape1 = 0, t_etape2 = 0, t_etape3 = 0;
+
+    uint64_t *entree, *sortie;
+    uint32_t *zeros_bloc, *decalage;
+    cudaMalloc(&entree, taille * sizeof(uint64_t));
+    cudaMalloc(&sortie, taille * sizeof(uint64_t));
+    cudaMalloc(&zeros_bloc, taille * sizeof(uint32_t));
+    cudaMalloc(&decalage, (nb_blocs + 1) * sizeof(uint32_t)); //on fait +1 pour le total des 0 aussi
+    uint32_t* decalage_cpu = new uint32_t[nb_blocs + 1];
 
     chrono.start();
-    cudaMemcpy(tableau_gpu, arr, nombre_elements * sizeof(uint64_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(entree, arr, taille * sizeof(uint64_t), cudaMemcpyHostToDevice);
+    t_copies += chrono.stop();
 
-    for(int numero_du_bit = 0; numero_du_bit < 64; numero_du_bit++){
-        //partie 1
-        compter_zero_bloc<<<nombre_de_blocs, THREADS_PAR_BLOC>>>(
-            tableau_gpu, zeros_avant_dans_bloc_gpu, blocs_gpu, nombre_elements, numero_du_bit);
+    for(int bit = 0; bit < 64; bit++){
+        //etape 1
+        chrono.start();
+        compter_v1<<<nb_blocs, TAILLE_BLOC>>>(entree, zeros_bloc, decalage, taille, bit);
+        t_etape1 += chrono.stop();
 
-        //partie 2 
-        cudaMemcpy(blocs_cpu, blocs_gpu, nombre_de_blocs * sizeof(uint32_t), cudaMemcpyDeviceToHost);
-        uint32_t somme = 0; 
-        for(int b = 0; b < nombre_de_blocs; b++){
-            uint32_t total_du_bloc = blocs_cpu[b];
-            blocs_cpu[b] = somme;
-            somme += total_du_bloc;
+        //etape 2
+        chrono.start();
+        cudaMemcpy(decalage_cpu, decalage, nb_blocs * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+        uint32_t somme = 0;
+        for(int b = 0; b < nb_blocs; b++){
+            uint32_t total = decalage_cpu[b];
+            decalage_cpu[b] = somme;
+            somme += total;
         }
-        cudaMemcpy(blocs_gpu, blocs_cpu, nombre_de_blocs * sizeof(uint32_t), cudaMemcpyHostToDevice);
+        decalage_cpu[nb_blocs] = somme;
+        cudaMemcpy(decalage, decalage_cpu, (nb_blocs + 1) * sizeof(uint32_t), cudaMemcpyHostToDevice);
+        t_etape2 += chrono.stop();
 
-        //partie 3
-        placer_nombre<<<nombre_de_blocs, THREADS_PAR_BLOC>>>(
-            tableau_gpu, tableau_gpu_sortie, zeros_avant_dans_bloc_gpu, blocs_gpu, nombre_elements, numero_du_bit, somme);
+        //etape 3
+        chrono.start();
+        placer<<<nb_blocs, TAILLE_BLOC>>>(entree, sortie, zeros_bloc, decalage, taille, bit);
+        t_etape3 += chrono.stop();
 
-        std::swap(tableau_gpu, tableau_gpu_sortie); 
+        std::swap(entree, sortie);   //la sortie devient l entree de la passe suivante
     }
 
-    cudaMemcpy(arr, tableau_gpu, nombre_elements * sizeof(uint64_t), cudaMemcpyDeviceToHost);
+    chrono.start();
+    cudaMemcpy(arr, entree, taille * sizeof(uint64_t), cudaMemcpyDeviceToHost);
+    t_copies += chrono.stop();
 
-    cudaFree(tableau_gpu);  cudaFree(tableau_gpu_sortie);
-    cudaFree(zeros_avant_dans_bloc_gpu);  cudaFree(blocs_gpu);
-    delete[] blocs_cpu;
+    cudaFree(entree);
+    cudaFree(sortie);
+    cudaFree(zeros_bloc);
+    cudaFree(decalage);
+    delete[] decalage_cpu;
+
+    printf("  copie vers CPU : %f s\n", t_copies / 1000);
+    printf("  etape 1 : %f s\n", t_etape1 / 1000);
+    printf("  etape 2 : %f s\n", t_etape2 / 1000);
+    printf("  etape 3 : %f s\n", t_etape3 / 1000);
+}
+
+void sort_gpu_v2(uint64_t* arr, size_t taille){
+    int nb_blocs = (taille + TAILLE_BLOC - 1) / TAILLE_BLOC;
+    cuStopwatch chrono;
+    float t_copies = 0, t_etape1 = 0, t_etape2 = 0, t_etape3 = 0;
+
+    uint64_t *entree, *sortie;
+    uint32_t *zeros_bloc, *decalage;
+    cudaMalloc(&entree, taille * sizeof(uint64_t));
+    cudaMalloc(&sortie, taille * sizeof(uint64_t));
+    cudaMalloc(&zeros_bloc, taille * sizeof(uint32_t));
+    cudaMalloc(&decalage, (nb_blocs + 1) * sizeof(uint32_t));
+
+    chrono.start();
+    cudaMemcpy(entree, arr, taille * sizeof(uint64_t), cudaMemcpyHostToDevice);
+    t_copies += chrono.stop();
+
+    for(int bit = 0; bit < 64; bit++){
+        //etape 1
+        chrono.start();
+        compter_v2<<<nb_blocs, 32>>>(entree, zeros_bloc, decalage, taille, bit);
+        t_etape1 += chrono.stop();
+
+        //etape 2
+        chrono.start();
+        cumuler<<<1, 32>>>(decalage, nb_blocs);
+        t_etape2 += chrono.stop();
+
+        //etape 3
+        chrono.start();
+        placer<<<nb_blocs, TAILLE_BLOC>>>(entree, sortie, zeros_bloc, decalage, taille, bit);
+        t_etape3 += chrono.stop();
+
+        std::swap(entree, sortie);
+    }
+
+    chrono.start();
+    cudaMemcpy(arr, entree, taille * sizeof(uint64_t), cudaMemcpyDeviceToHost);
+    t_copies += chrono.stop();
+
+    cudaFree(entree);
+    cudaFree(sortie);
+    cudaFree(zeros_bloc);
+    cudaFree(decalage);
+
+    printf("  copies vers CPU : %f s\n", t_copies / 1000);
+    printf("  etape 1 : %f s\n", t_etape1 / 1000);
+    printf("  etape 2 : %f s\n", t_etape2 / 1000);
+    printf("  etape 3 : %f s\n", t_etape3 / 1000);
 }
 
 
+void sort_cpu(uint64_t* tab, size_t taille){
+    uint64_t* zeros = new uint64_t[taille];
+    uint64_t* uns = new uint64_t[taille];
 
-void sort_cpu(uint64_t* tableau, size_t taille) {
-
-    uint64_t* tableau_des_zero = new uint64_t[taille];
-    uint64_t* tableau_des_un = new uint64_t[taille];
-
-    for(int num_bit = 0; num_bit < 64; num_bit++) {
-
-        size_t nb_bucket_zero = 0;
-        size_t nb_bucket_un = 0;
-
-        for(size_t i = 0; i < taille; i++) {
-            uint64_t courant = tableau[i];
-            uint64_t val_bit = (courant >> num_bit) & 1;
-
-            if(val_bit == 0) {
-                tableau_des_zero[nb_bucket_zero] = courant;
-                nb_bucket_zero++;
-            } else {
-                tableau_des_un[nb_bucket_un] = courant;
-                nb_bucket_un++;
-            }
+    for(int bit = 0; bit < 64; bit++){
+        size_t nb_zeros = 0, nb_uns = 0;
+        for(size_t i = 0; i < taille; i++){
+            if(((tab[i] >> bit) & 1) == 0) zeros[nb_zeros++] = tab[i];
+            else                           uns[nb_uns++] = tab[i];
         }
-
-        memcpy(tableau, tableau_des_zero, nb_bucket_zero*sizeof(uint64_t));
-        memcpy(tableau+nb_bucket_zero, tableau_des_un, nb_bucket_un*sizeof(uint64_t));
+        memcpy(tab, zeros, nb_zeros * sizeof(uint64_t));
+        memcpy(tab + nb_zeros, uns, nb_uns * sizeof(uint64_t));
     }
 
-    delete[] tableau_des_zero;
-    delete[] tableau_des_un;
+    delete[] zeros;
+    delete[] uns;
 }
 
-int main(int argc, char** argv) {
-    //on initialise tout ce dont on aura beesoin
-    if(argc != 2){
-        printf("utilisation : %s n   (n <= 32)\n", argv[0]);
+double secondes(clock_t debut, clock_t fin){
+    return (double)(fin - debut) / CLOCKS_PER_SEC;
+}
+
+int main(int argc, char** argv){
+    if(argc < 2 || argc > 3){
+        printf("Usage : %s n [version]   (n <= 32, version 1 ou 2, 2 par defaut)\n", argv[0]);
         return 1;
     }
-
     int n = atoi(argv[1]);
-
-    if(n < 0 || n > 32){
+    int version = (argc == 3) ? atoi(argv[2]) : 2;
+    if(n < 0 || n > 32 || (version != 1 && version != 2)){
         printf("n doit etre entre 0 et 32\n");
+        printf("la version 1 ou 2");
         return 1;
     }
-    size_t nombres_elements = (size_t) pow(2, n);
 
-    printf("n = %d\n", n);
-    printf("nombre elements : %zu\n\n", nombres_elements);
+    size_t taille = (size_t)pow(2, n);
+    printf("n = %d, version GPU %d\n", n, version);
+    printf("nombre elements : %zu\n\n", taille);
 
+    uint64_t* tab_ref = new uint64_t[taille];   // sort
+    uint64_t* tab_cpu = new uint64_t[taille];   // radix CPU
+    uint64_t* tab_gpu = new uint64_t[taille];   // radix GPU
 
-
-    uint64_t* tableau_a_trier = new uint64_t[nombres_elements];
-    uint64_t* tableau_de_reference = new uint64_t[nombres_elements];
+    randgen(tab_ref, taille);
     
-    randgen(tableau_a_trier, nombres_elements);
-    memcpy(tableau_de_reference, tableau_a_trier, nombres_elements*sizeof(uint64_t));
+    memcpy(tab_cpu, tab_ref, taille * sizeof(uint64_t));
+    memcpy(tab_gpu, tab_ref, taille * sizeof(uint64_t));
 
-    clock_t debut2 = clock();
-    std::sort(tableau_de_reference, tableau_de_reference+nombres_elements);
-    clock_t fin2 = clock();
-    double tempsSort = (double)(fin2-debut2)/CLOCKS_PER_SEC;
-    printf("temps sort : %f s\n", tempsSort);
+    clock_t t0 = clock();
+    std::sort(tab_ref, tab_ref + taille);
+    clock_t t1 = clock();
+    printf("temps sort : %f s\n", (double)(t1 - t0) / CLOCKS_PER_SEC);
 
-    clock_t debut = clock();
-    sort_cpu(tableau_a_trier, nombres_elements);
-    clock_t fin = clock();
-    double temmspRadixCpu = (double)(fin-debut)/CLOCKS_PER_SEC;
-    printf("temps radix cpu: %f s\n", temmspRadixCpu);
+    t0 = clock();
+    sort_cpu(tab_cpu, taille);
+    t1 = clock();
+    printf("temps radix cpu : %f s\n", (double)(t1 - t0) / CLOCKS_PER_SEC);
 
-    clock_t debut3 = clock();
-    sort_gpu(tableau_a_trier, nombres_elements);
-    clock_t fin3 = clock();
-    double temmspRadixGpu = (double)(fin3-debut3)/CLOCKS_PER_SEC;
-    printf("temps radix gpu: %f s\n\n", temmspRadixGpu);
+    printf("temps radix gpu, detail :\n");
+    t0 = clock();
+    if(version == 1){
+        sort_gpu_v1(tab_gpu, taille);
+    }else {
+        sort_gpu_v2(tab_gpu, taille);
+    }
+    t1 = clock();
+    printf("temps radix gpu : %f s\n\n", (double)(t1 - t0) / CLOCKS_PER_SEC);
 
 
-    delete[] tableau_a_trier;
-    delete[] tableau_de_reference;
+    delete[] tab_ref;
+    delete[] tab_cpu;
+    delete[] tab_gpu;
+    return 0;
 }
